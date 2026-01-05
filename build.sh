@@ -1,20 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Destination root: first argument or current directory
-dest="${1:-$(pwd)}"
+# Destination root: first argument or current directory (absolute path)
+if [[ $# -gt 0 ]]; then
+    dest="$(cd "$1" && pwd)"
+else
+    dest="$(pwd)"
+fi
 
 # Early exit if the library already exists at the destination
-if [[ -f "thirdparty/lib/libLIEF.a" ]]; then
+if [[ -f "$dest/thirdparty/lib/libLIEF.a" ]]; then
     exit 0
 fi
 
-# Ensure directory structure (relative to destination)
-mkdir -p "thirdparty"
-mkdir -p "thirdparty/include"
-mkdir -p "thirdparty/lib"
+# Create required directories
+mkdir -p "$dest/thirdparty"
+mkdir -p "$dest/thirdparty/include"
+mkdir -p "$dest/thirdparty/lib"
 
-# Switch to the directory where this script lives
+# Change to the directory where this script resides
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -29,13 +33,14 @@ if [[ -f "./build/libLIEF.a" ]]; then
     exit 0
 fi
 
-# Copy headers before build
+# Copy headers before building
 cp -r -f include "$includeDir"
 
-# Configure and build
+# Build directory
 mkdir -p build
 cd build
 
+# Configure and build with CMake + Ninja
 cmake \
   -DCMAKE_TOOLCHAIN_FILE="../zig.toolchain.cmake" \
   -G Ninja \
@@ -44,6 +49,6 @@ cmake \
 
 cmake --build . --target LIB_LIEF --config Release
 
-# Install outputs
+# Copy built library and headers
 cp -f libLIEF.a "$libDir"
 cp -r -f include "$includeDir"
