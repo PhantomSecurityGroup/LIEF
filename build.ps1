@@ -1,4 +1,4 @@
-$oldLocation = Get-Location
+$dest = if ($args.Length -gt 0) { $args[0] } else { Get-Location }
 
 if (Test-Path -Path "thirdparty\lib\libLIEF.a") {
     exit 0
@@ -10,14 +10,13 @@ mkdir -Force "thirdparty\lib"
 
 Set-Location $PSScriptRoot
 
-$includeDir = Join-Path $oldLocation "thirdparty"
-$libDir = Join-Path $oldLocation "thirdparty\lib"
+$includeDir = Join-Path $dest "thirdparty"
+$libDir = Join-Path $dest "thirdparty\lib"
 
 if (Test-Path -Path ".\build\libLIEF.a") {
     cp ".\build\libLIEF.a" $libDir
     cp -Recurse -Force ".\include" $includeDir
     cp -Recurse -Force ".\build\include" $includeDir
-    Set-Location $oldLocation
     exit 0
 }
 
@@ -32,4 +31,3 @@ cmake --build . --target LIB_LIEF --config Release
 cp -Force libLIEF.a $libDir
 cp -Recurse -Force include $includeDir
 
-Set-Location $oldLocation

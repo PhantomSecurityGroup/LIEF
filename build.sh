@@ -1,39 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Save the original working directory
-oldLocation="$(pwd)"
+# Destination root: first argument or current directory
+dest="${1:-$(pwd)}"
 
-# Early exit if the library already exists
+# Early exit if the library already exists at the destination
 if [[ -f "thirdparty/lib/libLIEF.a" ]]; then
     exit 0
 fi
 
-# Create directory structure
-mkdir -p thirdparty
-mkdir -p thirdparty/include
-mkdir -p thirdparty/lib
+# Ensure directory structure (relative to destination)
+mkdir -p "thirdparty"
+mkdir -p "thirdparty/include"
+mkdir -p "thirdparty/lib"
 
-# Change to the directory where this script lives
+# Switch to the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-includeDir="$oldLocation/thirdparty"
-libDir="$oldLocation/thirdparty/lib"
+includeDir="$dest/thirdparty"
+libDir="$dest/thirdparty/lib"
 
-# If build output already exists, just copy it
+# Fast path: reuse existing build output
 if [[ -f "./build/libLIEF.a" ]]; then
     cp -f "./build/libLIEF.a" "$libDir"
     cp -r -f "./include" "$includeDir"
     cp -r -f "./build/include" "$includeDir"
-    cd "$oldLocation"
     exit 0
 fi
 
-# Copy headers
+# Copy headers before build
 cp -r -f include "$includeDir"
 
-# Build
+# Configure and build
 mkdir -p build
 cd build
 
@@ -45,9 +44,6 @@ cmake \
 
 cmake --build . --target LIB_LIEF --config Release
 
-# Copy outputs
+# Install outputs
 cp -f libLIEF.a "$libDir"
 cp -r -f include "$includeDir"
-
-# Restore original directory
-cd "$oldLocation"
