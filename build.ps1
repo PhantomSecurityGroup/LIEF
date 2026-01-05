@@ -1,5 +1,4 @@
 $oldLocation = Get-Location
-Write-Host $oldLocation.ToString()
 
 if (Test-Path -Path "thirdparty\lib\libLIEF.a") {
     exit 0
